@@ -9,7 +9,7 @@ export default function Home() {
                 <meta name="description" content="Attendance Tracker" />
                 <link rel="icon" href="favicon.ico" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <meta name="google-site-verification" content="_AnLjaMEd-kIorOL36jd-o_0NwjNp6TctIQ2tcHFo3o" />
+                <meta name="google-site-verification" content="336KSEFp-My3dR7K_qxBhvMYoz9iSNT1g9HnMpnmMWU" />
             </Head>
             <AttendanceTracker />
         </>
