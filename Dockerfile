@@ -4,16 +4,19 @@ ARG NODE_VERSION=25
 FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /app
 
+# 1. Install pnpm
+RUN npm install -g pnpm
+
 # Install dependencies
 FROM base AS deps
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # Build
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # Production
 FROM base AS runner
