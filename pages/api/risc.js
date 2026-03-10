@@ -1,7 +1,7 @@
 // pages/api/risc.js
 import { OAuth2Client } from 'google-auth-library';
 
-const client = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const config = {
   api: {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         // 1. Verify the signature against Google's public keys
         const ticket = await client.verifyIdToken({
             idToken: rawBody,
-            audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
 
         const payload = ticket.getPayload();
