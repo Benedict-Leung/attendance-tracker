@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
                 <main className="main-content" style={{ alignItems: "flex-start" }}>
                     <div className="glass-card" style={{ maxWidth: "800px", padding: "2.5rem" }}>
                         <h2 style={{ fontSize: "1.75rem", marginBottom: "1rem", color: "var(--primary)" }}>Privacy Policy</h2>
-                        <p className="subtitle">Last updated: March 7, 2026</p>
+                        <p className="subtitle">Last updated: March 12, 2026</p>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", lineHeight: "1.6", color: "var(--text-main)" }}>
                             <section>
@@ -60,7 +60,18 @@ export default function PrivacyPolicy() {
                             </section>
 
                             <section>
-                                <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>5. Contact Us</h3>
+                                <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>5. Data Protection and Security</h3>
+                                <p>We implement strict security measures to protect sensitive information, including Student IDs and authentication data:</p>
+                                <ul style={{ paddingLeft: "1.5rem" }}>
+                                    <li><strong>Encryption in Transit:</strong> All data transmitted between your device and Google APIs is encrypted using industry-standard TLS/HTTPS protocols.</li>
+                                    <li><strong>No Persistent Storage:</strong> Sensitive data, such as scanned Student IDs, is only held in volatile memory during the active scanning session and is immediately discarded once securely transferred to your Google Sheet.</li>
+                                    <li><strong>Secure Authentication:</strong> Access to your Google account relies on secure OAuth 2.0 tokens, which are handled directly by your browser and are never stored persistently on any external database managed by us.</li>
+                                    <li><strong>Data at Rest:</strong> Because we do not use an independent backend database, the security of your saved attendance data relies on Google&apos;s robust infrastructure within your personal Google account.</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>6. Contact Us</h3>
                                 <p>If you have any questions about this Privacy Policy, please contact the application administrator at Ontario Tech University.</p>
                             </section>
                         </div>
