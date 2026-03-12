@@ -13,7 +13,7 @@ export default NextAuth({
                     access_type: "offline",
                     response_type: "code",
                     include_granted_scopes: "true",
-                    scope: "openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file"
+                    scope: "openid email profile https://www.googleapis.com/auth/drive.file"
                 }
             }
         }),
@@ -26,11 +26,14 @@ export default NextAuth({
         async jwt({ token, account }) {
             if (account) {
                 token.accessToken = account.access_token;
+                token.scope = account.scope; 
             }
             return token;
         },
         async session({ session, token }) {
             session.accessToken = token.accessToken;
+            session.scope = token.scope; 
+            
             session.googleApiKey = process.env.GOOGLE_API_KEY;
             if (process.env.GOOGLE_CLIENT_ID) {
                 session.googleAppId = process.env.GOOGLE_CLIENT_ID.split('-')[0];

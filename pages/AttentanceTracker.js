@@ -6,6 +6,7 @@ import Link from "next/link";
 
 export default function AttendanceTracker() {
     const { data: session, status } = useSession();
+    const hasSheetsScope = session?.scope?.includes("https://www.googleapis.com/auth/drive.file");
 
     // --- UI State ---
     const [step, setStep] = useState(1);
@@ -13,7 +14,6 @@ export default function AttendanceTracker() {
     const [errorMsg, setErrorMsg] = useState(null);
 
     // --- Sheets State ---
-    const [availableSheets, setAvailableSheets] = useState([]);
     const [selectedSheetId, setSelectedSheetId] = useState("");
     const [selectedSheetName, setSelectedSheetName] = useState("");
     const [availableTabs, setAvailableTabs] = useState([]);
@@ -159,6 +159,12 @@ export default function AttendanceTracker() {
     // ==========================================
     // SHEETS LOGIC (Using Native Fetch + NextAuth)
     // ==========================================
+    const elevatePermissions = () => {
+        signIn("google", undefined, {
+            scope: "openid email profile https://www.googleapis.com/auth/drive.file"
+        });
+    };
+
     const openGooglePicker = () => {
         if (!window.google || !window.google.picker || !session?.accessToken) {
             return setErrorMsg("Picker API is still loading. Please try again in a moment.");
@@ -194,8 +200,8 @@ export default function AttendanceTracker() {
                 headers: { Authorization: `Bearer ${session.accessToken}` }
             });
 
-            if (response.status === 401) {
-                signOut();
+            if (response.status === 401 || response.status === 403) {
+                upgradeToSheetsAccess();
                 return;
             }
             const data = await response.json();
@@ -413,28 +419,42 @@ export default function AttendanceTracker() {
 
                             <p className="subtitle">Select the spreadsheet and specific section you are tracking today.</p>
 
-                            <div className="form-group">
-                                <label>Spreadsheet Roster</label>
-                                {!selectedSheetId ? (
-                                    <button onClick={openGooglePicker} className="btn-secondary btn-large" style={{ width: '100%', justifyContent: 'center' }}>
-                                        <svg className="icon-launch" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                        Select from Google Drive
+                            {!hasSheetsScope ? (
+                                <div className="auth-elevation-card slide-up" style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                                    <svg className="icon-alert" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#3b82f6' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p className="subtitle" style={{ marginBottom: '1.5rem' }}>
+                                        To continue, the app requires permission to read the attendance roster you select.
+                                    </p>
+                                    <button onClick={elevatePermissions} className="btn-primary btn-large" style={{ width: '100%', justifyContent: 'center' }}>
+                                        Authorize Google Drive Access
                                     </button>
-                                ) : (
-                                    <div className="selected-file-card">
-                                        <span>
-                                            {selectedSheetName}
-                                        </span>
-                                        <button
-                                            onClick={openGooglePicker}
-                                            className="btn-secondary btn-small"
-                                            title="Change File"
-                                        >
-                                            Change
+                                </div>
+                            ): (
+                            <div className="form-group">
+                                    <label>Spreadsheet Roster</label>
+                                    {!selectedSheetId ? (
+                                        <button onClick={openGooglePicker} className="btn-secondary btn-large" style={{ width: '100%', justifyContent: 'center' }}>
+                                            <svg className="icon-launch" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                            Select from Google Drive
                                         </button>
-                                    </div>
-                                )}
-                            </div>
+                                    ) : (
+                                        <div className="selected-file-card">
+                                            <span>
+                                                {selectedSheetName}
+                                            </span>
+                                            <button
+                                                onClick={openGooglePicker}
+                                                className="btn-secondary btn-small"
+                                                title="Change File"
+                                            >
+                                                Change
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {availableTabs.length > 0 && !loadingMsg && selectedSheetId && (
                                 <div className="form-group slide-down">
