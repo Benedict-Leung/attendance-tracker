@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function AttendanceTracker() {
     const { data: session, status } = useSession();
-    
+
     // --- UI State ---
     const [step, setStep] = useState(1);
     const [loadingMsg, setLoadingMsg] = useState("");
@@ -15,6 +15,7 @@ export default function AttendanceTracker() {
     // --- Sheets State ---
     const [availableSheets, setAvailableSheets] = useState([]);
     const [selectedSheetId, setSelectedSheetId] = useState("");
+    const [selectedSheetName, setSelectedSheetName] = useState("");
     const [availableTabs, setAvailableTabs] = useState([]);
     const [selectedTab, setSelectedTab] = useState("");
     const [manualId, setManualId] = useState("");
@@ -61,7 +62,7 @@ export default function AttendanceTracker() {
 
             const worker = workersRef.current[workerIndexRef.current];
             workerIndexRef.current = (workerIndexRef.current + 1) % workersRef.current.length;
-            
+
             worker.postMessage({ frame: bitmap }, [bitmap]);
         } catch (err) {
             // Silently catch errors if the video frame isn't ready yet
@@ -120,9 +121,9 @@ export default function AttendanceTracker() {
         setScanResult(null);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                    facingMode: "environment", 
-                    width: { ideal: 4096 }, 
+                video: {
+                    facingMode: "environment",
+                    width: { ideal: 4096 },
                     height: { ideal: 2160 }
                 }
             });
@@ -132,7 +133,7 @@ export default function AttendanceTracker() {
                 videoRef.current.onloadedmetadata = async () => {
                     videoRef.current.play();
                     const track = stream.getVideoTracks()[0];
-                    
+
                     try {
                         const capabilities = track.getCapabilities();
                         if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
@@ -158,36 +159,32 @@ export default function AttendanceTracker() {
     // ==========================================
     // SHEETS LOGIC (Using Native Fetch + NextAuth)
     // ==========================================
-    const fetchUserSheets = async (token) => {
-        setLoadingMsg('Loading your spreadsheets...');
-        try {
-            const response = await fetch("https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (response.status === 401) {
-                signOut();
-                return;
-            }
-            const data = await response.json();
-            
-            if (data.error) throw new Error(data.error.message);
-
-            const files = data.files || [];
-            files.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
-            setAvailableSheets(files);
-            setLoadingMsg(null);
-        } catch (error) {
-            console.error("Failed to fetch sheets", error);
-            setErrorMsg("Failed to load spreadsheets.");
-            setLoadingMsg(null);
+    const openGooglePicker = () => {
+        if (!window.google || !window.google.picker || !session?.accessToken) {
+            return setErrorMsg("Picker API is still loading. Please try again in a moment.");
         }
-    };
 
-    const handleSheetSelection = (e) => {
-        const sheetId = e.target.value;
-        setSelectedSheetId(sheetId);
-        if (sheetId) fetchSheetTabs(sheetId);
+        const view = new window.google.picker.DocsView(window.google.picker.ViewId.SPREADSHEETS)
+            .setMimeTypes('application/vnd.google-apps.spreadsheet')
+            .setMode(window.google.picker.DocsViewMode.LIST);
+
+        const picker = new window.google.picker.PickerBuilder()
+            .addView(view)
+            .setOAuthToken(session.accessToken)
+            .setDeveloperKey(session.googleApiKey)
+            .enableFeature(google.picker.Feature.NAV_HIDDEN)
+            .setAppId(session.googleAppId)
+            .setCallback((data) => {
+                if (data.action === window.google.picker.Action.PICKED) {
+                    const doc = data.docs[0];
+                    setSelectedSheetId(doc.id);
+                    setSelectedSheetName(doc.name);
+                    fetchSheetTabs(doc.id);
+                }
+            })
+            .build();
+
+        picker.setVisible(true);
     };
 
     const fetchSheetTabs = async (sheetId) => {
@@ -227,10 +224,10 @@ export default function AttendanceTracker() {
         e.preventDefault();
         const cleanId = manualId.trim();
         if (!cleanId) return;
-        
-        stopCamera(); 
+
+        stopCamera();
         processBarcodeData(cleanId);
-        setManualId(""); 
+        setManualId("");
     };
 
     const processBarcodeData = useCallback(async (studentId) => {
@@ -241,7 +238,7 @@ export default function AttendanceTracker() {
             const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${selectedSheetId}/values/${selectedTab}!A:D`, {
                 headers: { Authorization: `Bearer ${session.accessToken}` }
             });
-            
+
             if (getRes.status === 401) {
                 stopCamera();
                 signOut();
@@ -270,7 +267,7 @@ export default function AttendanceTracker() {
                     // 2. Write the "Present" status and timestamp back to the sheet
                     const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${selectedSheetId}/values/${selectedTab}!C${rowIndex}:D${rowIndex}?valueInputOption=USER_ENTERED`, {
                         method: 'PUT',
-                        headers: { 
+                        headers: {
                             'Authorization': `Bearer ${session.accessToken}`,
                             'Content-Type': 'application/json'
                         },
@@ -314,7 +311,7 @@ export default function AttendanceTracker() {
                     detectionCountRef.current[code].count++;
 
                     if (detectionCountRef.current[code].count >= 2) {
-                        if (navigator.vibrate) { try { navigator.vibrate([100,50,100]); } catch {} }
+                        if (navigator.vibrate) { try { navigator.vibrate([100, 50, 100]); } catch { } }
                         stopCamera();
                         processBarcodeData(code);
                         detectionCountRef.current = {};
@@ -335,15 +332,23 @@ export default function AttendanceTracker() {
     useEffect(() => {
         if (status === "authenticated" && session?.accessToken) {
             setStep(2);
-            fetchUserSheets(session.accessToken);
         } else if (status === "unauthenticated") {
             setStep(1);
+        }
+
+        if (typeof window !== "undefined" && !window.gapi) {
+            const script = document.createElement("script");
+            script.src = "https://apis.google.com/js/api.js";
+            script.onload = () => {
+                window.gapi.load("picker");
+            };
+            document.body.appendChild(script);
         }
     }, [status, session]);
 
     useEffect(() => {
         if (step === 3) startCamera();
-        return () => stopCamera(); 
+        return () => stopCamera();
     }, [step, startCamera, stopCamera]);
 
     // ==========================================
@@ -370,14 +375,14 @@ export default function AttendanceTracker() {
 
             <main className="main-content">
                 <div className="glass-card fade-in">
-                    
+
                     {loadingMsg && step !== 2 && (
                         <div className="state-container">
                             <div className="spinner"></div>
                             <p className="state-text">{loadingMsg}</p>
                         </div>
                     )}
-                    
+
                     {errorMsg && (
                         <div className="alert-error">
                             <svg className="icon-alert" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -406,25 +411,32 @@ export default function AttendanceTracker() {
                                 <h2>Session Details</h2>
                             </div>
 
-                            {availableSheets.length > 0 && (
-                                <>
-                                    <p className="subtitle">Select the spreadsheet and specific section you are tracking today.</p>
-                                    
-                                    <div className="form-group">
-                                        <label>Select Spreadsheet</label>
-                                        <div className="select-wrapper">
-                                            <select value={selectedSheetId} onChange={handleSheetSelection}>
-                                                <option value="" disabled>Select a document...</option>
-                                                {availableSheets.map(sheet => (
-                                                    <option key={sheet.id} value={sheet.id}>{sheet.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                            <p className="subtitle">Select the spreadsheet and specific section you are tracking today.</p>
 
-                            {availableTabs.length > 0 && !loadingMsg && (
+                            <div className="form-group">
+                                <label>Spreadsheet Roster</label>
+                                {!selectedSheetId ? (
+                                    <button onClick={openGooglePicker} className="btn-secondary btn-large" style={{ width: '100%', justifyContent: 'center' }}>
+                                        <svg className="icon-launch" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ marginRight: '8px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        Select from Google Drive
+                                    </button>
+                                ) : (
+                                    <div className="selected-file-card">
+                                        <span>
+                                            {selectedSheetName}
+                                        </span>
+                                        <button
+                                            onClick={openGooglePicker}
+                                            className="btn-secondary btn-small"
+                                            title="Change File"
+                                        >
+                                            Change
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {availableTabs.length > 0 && !loadingMsg && selectedSheetId && (
                                 <div className="form-group slide-down">
                                     <label>Course Section</label>
                                     <div className="select-wrapper">
@@ -445,9 +457,9 @@ export default function AttendanceTracker() {
                                 </div>
                             )}
 
-                            <button 
-                                onClick={startAttendance} 
-                                disabled={!selectedTab} 
+                            <button
+                                onClick={startAttendance}
+                                disabled={!selectedTab || !selectedSheetId}
                                 className="btn-launch btn-large mt-4"
                             >
                                 <span>Scan</span>
@@ -473,10 +485,10 @@ export default function AttendanceTracker() {
                             {!scanResult && (
                                 <div className="scanner-wrapper">
                                     <div id="scanner-container">
-                                        <video 
-                                            ref={videoRef} 
-                                            id="camera-stream" 
-                                            autoPlay 
+                                        <video
+                                            ref={videoRef}
+                                            id="camera-stream"
+                                            autoPlay
                                             playsInline
                                             onClick={async () => {
                                                 if (videoRef.current && videoRef.current.srcObject) {
@@ -485,14 +497,14 @@ export default function AttendanceTracker() {
                                                         await track.applyConstraints({ advanced: [{}] });
                                                         setCameraMsg("Focusing...");
                                                         setTimeout(() => setCameraMsg("Position barcode inside the frame."), 1000);
-                                                    } catch(e) {}
+                                                    } catch (e) { }
                                                 }
                                             }}
                                         ></video>
                                         <canvas ref={overlayCanvasRef} id="overlay-canvas"></canvas>
-                                        
+
                                         {zoomLevel > 1 && <div id="zoom-indicator">{zoomLevel.toFixed(1)}x Zoom</div>}
-                                        
+
                                         <div className="camera-overlay">
                                             <div className="viewfinder">
                                                 <div className="corner top-left"></div>
@@ -507,17 +519,17 @@ export default function AttendanceTracker() {
                                     <div className="manual-entry-section">
                                         <p className="divider-text"><span>OR</span></p>
                                         <form onSubmit={handleManualSubmit} className="manual-entry-form">
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 id="manual-id"
-                                                placeholder="Enter Student ID manually" 
+                                                placeholder="Enter Student ID manually"
                                                 value={manualId}
                                                 onChange={(e) => setManualId(e.target.value)}
                                                 className="input-text"
                                             />
-                                            <button 
-                                                type="submit" 
-                                                className="btn-secondary" 
+                                            <button
+                                                type="submit"
+                                                className="btn-secondary"
                                                 disabled={!manualId.trim()}
                                                 style={{ width: "auto", margin: 0, padding: ".875rem 1rem", flex: 1 }}
                                             >
@@ -531,7 +543,7 @@ export default function AttendanceTracker() {
                             {scanResult && (
                                 <div className={`result-card ${scanResult.found ? "success" : "error"} slide-up`}>
                                     <div className="result-icon">
-                                        {scanResult.found 
+                                        {scanResult.found
                                             ? <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                             : <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> </svg>
                                         }
@@ -549,7 +561,7 @@ export default function AttendanceTracker() {
                     )}
                 </div>
             </main>
-            
+
             <footer className="app-footer">
                 <div className="footer-content">
                     <p>&copy; {new Date().getFullYear()} OTU Attendance</p>
