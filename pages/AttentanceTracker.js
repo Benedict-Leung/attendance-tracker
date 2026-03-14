@@ -31,7 +31,6 @@ export default function AttendanceTracker() {
     const detectionCountRef = useRef({});
 
     const workersRef = useRef([]);
-    const workerIndexRef = useRef(0);
 
     // ==========================================
     // SCANNER & CAMERA LOGIC
@@ -48,24 +47,25 @@ export default function AttendanceTracker() {
         if (!isScanningRef.current || !videoRef.current || workersRef.current.length === 0) return;
 
         const video = videoRef.current;
+        const availableWorker = workersRef.current.find(w => !w.isBusy);
 
-        try {
-            const targetWidth = 960;
-            const scale = targetWidth / video.videoWidth;
-            const targetHeight = Math.floor(video.videoHeight * scale);
+        if (availableWorker) {
+            try {
+                const targetWidth = 960;
+                const scale = targetWidth / video.videoWidth;
+                const targetHeight = Math.floor(video.videoHeight * scale);
 
-            const offscreen = new OffscreenCanvas(targetWidth, targetHeight);
-            const ctx = offscreen.getContext("2d");
+                const offscreen = new OffscreenCanvas(targetWidth, targetHeight);
+                const ctx = offscreen.getContext("2d");
 
-            ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
-            const bitmap = await createImageBitmap(offscreen);
+                ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+                const bitmap = await createImageBitmap(offscreen);
 
-            const worker = workersRef.current[workerIndexRef.current];
-            workerIndexRef.current = (workerIndexRef.current + 1) % workersRef.current.length;
-
-            worker.postMessage({ frame: bitmap }, [bitmap]);
-        } catch (err) {
-            // Silently catch errors if the video frame isn't ready yet
+                availableWorker.isBusy = true;
+                availableWorker.instance.postMessage({ frame: bitmap }, [bitmap]);
+            } catch (err) {
+                availableWorker.isBusy = false; 
+            }
         }
 
         if (isScanningRef.current) {
@@ -302,8 +302,14 @@ export default function AttendanceTracker() {
         const workerCount = 2;
         workersRef.current = Array.from({ length: workerCount }, () => {
             const worker = new Worker(new URL("../worker/worker.js", import.meta.url), { type: "module" });
+            
+            const workerObj = { instance: worker, isBusy: false };
 
             worker.onmessage = (e) => {
+                workerObj.isBusy = false;
+
+                if (!isScanningRef.current) return;
+
                 const data = e.data;
                 if (data.error) return;
 
@@ -324,11 +330,11 @@ export default function AttendanceTracker() {
                     }
                 }
             };
-            return worker;
+            return workerObj;
         });
 
         return () => {
-            workersRef.current.forEach(w => w.terminate());
+            workersRef.current.forEach(w => w.instance.terminate());
         };
     }, [processBarcodeData, stopCamera]);
 
