@@ -263,7 +263,7 @@ export default function AttendanceTracker() {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
                         studentFound = true;
                         studentName = rows[i][0] || "Unknown Student";
-                        studentPhoto = rows[i][4] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+                        studentPhoto = rows[i][5] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
                         rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
@@ -577,7 +577,7 @@ export default function AttendanceTracker() {
                                         }
                                     </div>
                                     <div>
-										<img src={scanResult.photo} alt="user photo" height="200" />
+										<img src={scanResult.photo} alt="user photo" width="30%" />
 									</div>
                                     <div className="result-details">
                                         <h3>{scanResult.found ? "Attendance Recorded" : "Student Not Found"}</h3>
