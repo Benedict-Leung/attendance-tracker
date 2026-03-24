@@ -262,6 +262,7 @@ export default function AttendanceTracker() {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
                         studentFound = true;
                         studentName = rows[i][0] || "Unknown Student";
+                        studentPhoto = rows[i][4] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
                         rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
@@ -282,7 +283,7 @@ export default function AttendanceTracker() {
 
                     if (!putRes.ok) throw new Error("Failed to write to sheet");
 
-                    setScanResult({ found: true, name: studentName, id: studentId });
+                    setScanResult({ found: true, name: studentName, id: studentId, photo: studentPhoto });
                 } else {
                     setScanResult({ found: false, name: "", id: studentId });
                 }
@@ -574,6 +575,9 @@ export default function AttendanceTracker() {
                                             : <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> </svg>
                                         }
                                     </div>
+                                    <div>
+										<img src={scanResult.photo} alt="user photo" height="200" />
+									</div>
                                     <div className="result-details">
                                         <h3>{scanResult.found ? "Attendance Recorded" : "Student Not Found"}</h3>
                                         {scanResult.found && <p className="student-name">{scanResult.name}</p>}
