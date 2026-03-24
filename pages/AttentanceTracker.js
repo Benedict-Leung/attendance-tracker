@@ -261,11 +261,11 @@ export default function AttendanceTracker() {
 
                 for (let i = 0; i < rows.length; i++) {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
-                        studentFound = true;
+                        console.log(rows[i]);
+						studentFound = true;
                         studentName = rows[i][0] || "Unknown Student";
                         studentPhoto = rows[i][5] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-						console.log(studentPhoto);
-                        rowIndex = i + 1; // Google Sheets is 1-indexed
+						rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
                 }
