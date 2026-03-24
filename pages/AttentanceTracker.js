@@ -241,7 +241,7 @@ export default function AttendanceTracker() {
 
         try {
             // 1. Get the current sheet data
-            const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${selectedSheetId}/values/${selectedTab}!A:D`, {
+            const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${selectedSheetId}/values/${selectedTab}!A:E`, {
                 headers: { Authorization: `Bearer ${session.accessToken}` }
             });
 
@@ -261,7 +261,6 @@ export default function AttendanceTracker() {
 
                 for (let i = 0; i < rows.length; i++) {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
-                        console.log(rows[i]);
 						studentFound = true;
                         studentName = rows[i][0] || "Unknown Student";
                         studentPhoto = rows[i][5] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
