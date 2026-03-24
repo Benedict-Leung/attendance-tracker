@@ -252,8 +252,7 @@ export default function AttendanceTracker() {
             }
             const getData = await getRes.json();
             const rows = getData.values || [];
-			console.log(rows);
-
+			
             if (rows.length > 0) {
                 let studentFound = false;
                 let studentName = "";
@@ -263,8 +262,10 @@ export default function AttendanceTracker() {
                 for (let i = 0; i < rows.length; i++) {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
 						studentFound = true;
+						console.log(rows[i]);
                         studentName = rows[i][0] || "Unknown Student";
-                        studentPhoto = rows[i][5] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+                        studentPhoto = rows[i][4] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+						console.log(studentPhoto);
 						rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
