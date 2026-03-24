@@ -570,8 +570,8 @@ export default function AttendanceTracker() {
 
                             {scanResult && (
                                 <div className={`result-card ${scanResult.found ? "success" : "error"} slide-up`}>
-                                    <div>
-										<img src={scanResult.photo} alt="user photo" width="30%" />
+                                    <div style="padding-bottom: 0.5cm;">
+										<img src={scanResult.photo} alt="user photo" width="50%" />
 									</div>
 									<div className="result-icon">
                                         {scanResult.found
