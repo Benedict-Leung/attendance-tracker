@@ -570,8 +570,8 @@ export default function AttendanceTracker() {
 
                             {scanResult && (
                                 <div className={`result-card ${scanResult.found ? "success" : "error"} slide-up`}>
-                                    <div style={{ paddingBottom: "0.5cm" }}></div>
-										<img src={scanResult.photo} alt="user photo" width="50%" />
+                                    <div style={{ paddingBottom: "0.5cm" }}>
+										<img src={scanResult.photo} alt="user photo" style={{ width: "50%" }} />
 									</div>
 									<div className="result-icon">
                                         {scanResult.found
