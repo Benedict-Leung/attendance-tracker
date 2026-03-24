@@ -256,6 +256,7 @@ export default function AttendanceTracker() {
             if (rows.length > 0) {
                 let studentFound = false;
                 let studentName = "";
+				let studentPhoto = "";
                 let rowIndex = -1;
 
                 for (let i = 0; i < rows.length; i++) {
