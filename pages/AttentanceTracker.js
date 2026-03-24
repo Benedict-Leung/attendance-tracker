@@ -252,6 +252,7 @@ export default function AttendanceTracker() {
             }
             const getData = await getRes.json();
             const rows = getData.values || [];
+			console.log(rows);
 
             if (rows.length > 0) {
                 let studentFound = false;
