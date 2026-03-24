@@ -262,10 +262,8 @@ export default function AttendanceTracker() {
                 for (let i = 0; i < rows.length; i++) {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
 						studentFound = true;
-						console.log(rows[i]);
-                        studentName = rows[i][0] || "Unknown Student";
+						studentName = rows[i][0] || "Unknown Student";
                         studentPhoto = rows[i][4] || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-						console.log(studentPhoto);
 						rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
@@ -572,16 +570,16 @@ export default function AttendanceTracker() {
 
                             {scanResult && (
                                 <div className={`result-card ${scanResult.found ? "success" : "error"} slide-up`}>
-                                    <div className="result-icon">
+                                    <div>
+										<img src={scanResult.photo} alt="user photo" width="30%" />
+									</div>
+									<div className="result-icon">
                                         {scanResult.found
                                             ? <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                             : <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> </svg>
                                         }
                                     </div>
-                                    <div>
-										<img src={scanResult.photo} alt="user photo" width="30%" />
-									</div>
-                                    <div className="result-details">
+                                   <div className="result-details">
                                         <h3>{scanResult.found ? "Attendance Recorded" : "Student Not Found"}</h3>
                                         {scanResult.found && <p className="student-name">{scanResult.name}</p>}
                                         <p className="student-id">ID: {scanResult.id}</p>
