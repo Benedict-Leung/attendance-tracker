@@ -13,7 +13,7 @@ export default NextAuth({
                     access_type: "offline",
                     response_type: "code",
                     include_granted_scopes: "true",
-                    scope: "openid email profile https://www.googleapis.com/auth/drive.file"
+                    scope: "openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
                 }
             }
         }),
@@ -26,7 +26,7 @@ export default NextAuth({
         async jwt({ token, account }) {
             if (account) {
                 token.accessToken = account.access_token;
-                token.scope = account.scope; 
+                token.scope = account.scope;
             }
             return token;
         },
