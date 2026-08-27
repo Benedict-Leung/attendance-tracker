@@ -256,14 +256,14 @@ export default function AttendanceTracker() {
             if (rows.length > 0) {
                 let studentFound = false;
                 let studentName = "";
-				let studentPhoto = "not_found.png";
+				let studentPhoto = "/not_found.png";
                 let rowIndex = -1;
 
                 for (let i = 0; i < rows.length; i++) {
                     if (rows[i].length > 1 && rows[i][1] === studentId) {
 						studentFound = true;
 						studentName = rows[i][0] || "Unknown Student";
-                        studentPhoto = rows[i][4] || "no_image.png";
+                        studentPhoto = rows[i][4] || "/no_image.png";
 						rowIndex = i + 1; // Google Sheets is 1-indexed
                         break;
                     }
