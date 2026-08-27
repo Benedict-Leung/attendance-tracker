@@ -286,7 +286,7 @@ export default function AttendanceTracker() {
 
                     setScanResult({ found: true, name: studentName, id: studentId, photo: studentPhoto });
                 } else {
-                    setScanResult({ found: false, name: "", id: studentId });
+                    setScanResult({ found: false, name: "", id: studentId, photo: studentPhoto });
                 }
             } else {
                 setCameraMsg("No data found in the sheet.");
