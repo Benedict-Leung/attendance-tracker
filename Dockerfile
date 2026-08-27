@@ -4,8 +4,8 @@ ARG NODE_VERSION=25
 FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /app
 
-# 1. Install pnpm
-RUN npm install -g pnpm
+# 1. Install the exact pnpm version used by the project
+RUN npm install -g pnpm@10.32.0
 
 # Install dependencies
 FROM base AS deps
