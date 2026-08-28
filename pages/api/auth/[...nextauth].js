@@ -13,7 +13,7 @@ export default NextAuth({
                     access_type: "offline",
                     response_type: "code",
                     include_granted_scopes: "true",
-                    scope: "openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
+                    scope: "openid email profile https://www.googleapis.com/auth/drive.file"
                 }
             }
         }),

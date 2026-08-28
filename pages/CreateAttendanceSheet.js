@@ -193,8 +193,7 @@ const RESERVED_TAB_NAMES = ["template", "Summary"];
 
 export default function CreateAttendanceSheet() {
     const { data: session, status } = useSession();
-    const hasSheetsScope = session?.scope?.includes("https://www.googleapis.com/auth/drive.file")
-        && session?.scope?.includes("https://www.googleapis.com/auth/drive.readonly");
+    const hasSheetsScope = session?.scope?.includes("https://www.googleapis.com/auth/drive.file");
 
     const [step, setStep] = useState(1);
     const [loadingMsg, setLoadingMsg] = useState("");
@@ -228,7 +227,7 @@ export default function CreateAttendanceSheet() {
 
     const elevatePermissions = () => {
         signIn("google", undefined, {
-            scope: "openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
+            scope: "openid email profile https://www.googleapis.com/auth/drive.file"
         });
     };
 
